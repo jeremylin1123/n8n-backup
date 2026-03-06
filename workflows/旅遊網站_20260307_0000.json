@@ -1,0 +1,1481 @@
+{
+  "updatedAt": "2026-03-06T08:55:06.166Z",
+  "createdAt": "2026-03-06T03:24:21.192Z",
+  "id": "0JQjej3HMT9oMNNF",
+  "name": "旅遊網站",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "get-trips",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -80
+      ],
+      "id": "44e3d387-ba6b-4052-b696-c341e7e89d38",
+      "name": "Webhook",
+      "webhookId": "bc470fd7-4935-4a98-afed-7c2ad52238f9"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+          "mode": "list",
+          "cachedResultName": "LINE群組行程表",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1130248658,
+          "mode": "list",
+          "cachedResultName": "Trips",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=1130248658"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        -80
+      ],
+      "id": "781cb9c5-fc8d-43ea-9918-5997ce69df94",
+      "name": "Get Trips",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleApi": {
+          "id": "UiwHn4ZOLTd2DeqY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+          "mode": "list",
+          "cachedResultName": "LINE群組行程表",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 568127233,
+          "mode": "list",
+          "cachedResultName": "Itinerary",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=568127233"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        -80
+      ],
+      "id": "b80a26da-6628-4c60-be36-da30f4386ae3",
+      "name": "Get Itinerary",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleApi": {
+          "id": "UiwHn4ZOLTd2DeqY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+          "mode": "list",
+          "cachedResultName": "LINE群組行程表",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1703797554,
+          "mode": "list",
+          "cachedResultName": "Foods",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=1703797554"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        672,
+        -80
+      ],
+      "id": "246a0d79-5c4f-4e2e-84f9-0f1a7f78ae35",
+      "name": "Get Foods",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleApi": {
+          "id": "UiwHn4ZOLTd2DeqY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 從前面的三個節點抓取資料\nconst trips = $items(\"Get Trips\").map(i => i.json);\nconst itineraries = $items(\"Get Itinerary\").map(i => i.json);\nconst foods = $items(\"Get Foods\").map(i => i.json);\n\n// 2. 開始重組資料：只挑選 Status 是 active 的資料夾\nconst formattedTrips = trips.filter(t => t.Status === 'active').map(trip => {\n    \n    // --- 處理行程 (Itinerary) ---\n    // 找出屬於這個 Trip_ID 的所有行程\n    const tripItineraries = itineraries.filter(i => i.Trip_ID === trip.Trip_ID);\n    \n    // 按照 Day_Label (例如 Day 1, Day 2) 分組\n    const daysMap = {};\n    tripItineraries.forEach(item => {\n        if (!daysMap[item.Day_Label]) {\n            daysMap[item.Day_Label] = {\n                id: `day_${item.Day_Label}_${trip.Trip_ID}`, \n                label: item.Day_Label,\n                items: []\n            };\n        }\n        \n        // 塞入單筆行程細節\n        daysMap[item.Day_Label].items.push({\n            id: item.Item_ID,\n            time: item.Time,\n            title: item.Title,\n            desc: item.Desc || '',\n            url: item.URL || '',\n            isHidden: item.Is_Hidden === 'TRUE' || item.Is_Hidden === true, // 處理布林值\n            sortOrder: parseInt(item.Sort_Order) || 99\n        });\n    });\n\n    // 將分組好的天數轉成陣列，並依照時間或 Sort_Order 排序\n    const days = Object.values(daysMap);\n    days.forEach(day => {\n        day.items.sort((a, b) => a.sortOrder - b.sortOrder);\n    });\n\n    // --- 處理美食 (Foods) ---\n    // 找出屬於這個 Trip_ID 的美食\n    const tripFoods = foods.filter(f => f.Trip_ID === trip.Trip_ID).map(f => ({\n        id: f.Food_ID,\n        icon: f.Icon_Key,\n        title: f.Title,\n        desc: f.Desc || '',\n        url: f.URL || ''\n    }));\n\n    // 3. 回傳最終組裝好的這個資料夾\n    return {\n        id: trip.Trip_ID,\n        name: trip.Trip_Name,\n        days: days,\n        foods: tripFoods\n    };\n});\n\n// 4. n8n 最終輸出的格式\nreturn [{ json: { success: true, data: formattedTrips } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        -80
+      ],
+      "id": "63bf49d3-7c1f-4dbd-a6a0-7a82bf93472c",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+          "mode": "list",
+          "cachedResultName": "LINE群組行程表",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 568127233,
+          "mode": "list",
+          "cachedResultName": "Itinerary",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=568127233"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Item_ID": "={{ $json.body.id }}",
+            "Trip_ID": "={{ $json.body.tripId }}",
+            "Day_Label": "={{ $json.body.dayLabel }}",
+            "Time": "={{ $json.body.time}}",
+            "Title": "={{ $json.body.title }}\n",
+            "Desc": "={{ $json.body.desc }}",
+            "URL": "={{ $json.body.url }}",
+            "Is_Hidden": "={{ $json.body.isHidden }}",
+            "Sort_Order": "={{ $json.body.sortOrder }}"
+          },
+          "matchingColumns": [
+            "Item_ID"
+          ],
+          "schema": [
+            {
+              "id": "Item_ID",
+              "displayName": "Item_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Trip_ID",
+              "displayName": "Trip_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Day_Label",
+              "displayName": "Day_Label",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Time",
+              "displayName": "Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Desc",
+              "displayName": "Desc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Is_Hidden",
+              "displayName": "Is_Hidden",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sort_Order",
+              "displayName": "Sort_Order",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        656,
+        64
+      ],
+      "id": "7fa2e757-76b0-4ca3-817d-52c95ab713e9",
+      "name": "Append or update row in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "UiwHn4ZOLTd2DeqY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "update-trips",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        16,
+        320
+      ],
+      "id": "d390e661-f232-49e8-b2be-4e263661ebce",
+      "name": "Webhook2",
+      "webhookId": "b505cdd3-2edf-475c-b4e6-218b5152b21d"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+          "mode": "list",
+          "cachedResultName": "LINE群組行程表",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1130248658,
+          "mode": "list",
+          "cachedResultName": "Trips",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=1130248658"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Trip_ID": "={{ $json.body.Trip_ID }}",
+            "Trip_Name": "={{ $json.body.Trip_Name }}",
+            "Status": "={{ $json.body.Status }}"
+          },
+          "matchingColumns": [
+            "Trip_ID"
+          ],
+          "schema": [
+            {
+              "id": "Trip_ID",
+              "displayName": "Trip_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Trip_Name",
+              "displayName": "Trip_Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        320
+      ],
+      "id": "e2e0cce2-b93c-48b3-b5b1-d613a133b7d8",
+      "name": "Append or update row in sheet1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "UiwHn4ZOLTd2DeqY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "update-food",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        16,
+        480
+      ],
+      "id": "a94f0023-7ea2-44ca-ab08-86d9fa629066",
+      "name": "Webhook3",
+      "webhookId": "b505cdd3-2edf-475c-b4e6-218b5152b21d"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+          "mode": "list",
+          "cachedResultName": "LINE群組行程表",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1703797554,
+          "mode": "list",
+          "cachedResultName": "Foods",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=1703797554"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Food_ID": "={{ $json.body.Food_ID }}",
+            "Trip_ID": "={{ $json.body.Trip_ID }}",
+            "Icon_Key": "={{ $json.body.Icon_Key }}",
+            "Title": "={{ $json.body.Title }}",
+            "Desc": "={{ $json.body.Desc }}",
+            "URL": "={{ $json.body.URL }}"
+          },
+          "matchingColumns": [
+            "Food_ID"
+          ],
+          "schema": [
+            {
+              "id": "Food_ID",
+              "displayName": "Food_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Trip_ID",
+              "displayName": "Trip_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Icon_Key",
+              "displayName": "Icon_Key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Desc",
+              "displayName": "Desc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        480
+      ],
+      "id": "49b42d5b-b56c-4bbe-9c5a-eb9ec81b02e0",
+      "name": "Append or update row in sheet2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "UiwHn4ZOLTd2DeqY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "update-itinerary",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        32,
+        144
+      ],
+      "id": "e908af20-74d2-4acc-845c-e2dd1dbd7352",
+      "name": "update-itinerary",
+      "webhookId": "b505cdd3-2edf-475c-b4e6-218b5152b21d"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "=update_item",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "718e8927-e1c8-49af-b946-eab26bc08858"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "update_item"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "59569926-929a-4446-93d4-389a95ed1156",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "update_sort",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "update_sort"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        144
+      ],
+      "id": "7ec8c07b-9e0b-4557-9e3f-5f2d098875fa",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body.items",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        448,
+        240
+      ],
+      "id": "9819457f-90ef-400f-89f0-98eea9f25bf6",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+          "mode": "list",
+          "cachedResultName": "LINE群組行程表",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 568127233,
+          "mode": "list",
+          "cachedResultName": "Itinerary",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=568127233"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Item_ID": "={{ $json.id }}",
+            "Sort_Order": "={{ $json.sortOrder }}"
+          },
+          "matchingColumns": [
+            "Item_ID"
+          ],
+          "schema": [
+            {
+              "id": "Item_ID",
+              "displayName": "Item_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Trip_ID",
+              "displayName": "Trip_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Day_Label",
+              "displayName": "Day_Label",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Time",
+              "displayName": "Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Desc",
+              "displayName": "Desc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Is_Hidden",
+              "displayName": "Is_Hidden",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Sort_Order",
+              "displayName": "Sort_Order",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        656,
+        240
+      ],
+      "id": "cebd214a-0bcf-46bc-99d7-67610dede9e1",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "UiwHn4ZOLTd2DeqY",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Trips",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Trips": {
+      "main": [
+        [
+          {
+            "node": "Get Itinerary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Itinerary": {
+      "main": [
+        [
+          {
+            "node": "Get Foods",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Foods": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook2": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook3": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update-itinerary": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "dd5027a2-3ce8-40d3-8964-51030cd457c7",
+  "activeVersionId": "2f586e5a-8465-43a2-853c-736a022cc193",
+  "triggerCount": 4,
+  "shared": [
+    {
+      "updatedAt": "2026-03-06T03:24:21.192Z",
+      "createdAt": "2026-03-06T03:24:21.192Z",
+      "role": "workflow:owner",
+      "workflowId": "0JQjej3HMT9oMNNF",
+      "projectId": "V1MDW5aV3riAJAHp"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-03-06T06:45:45.477Z",
+    "createdAt": "2026-03-06T06:42:01.795Z",
+    "versionId": "2f586e5a-8465-43a2-853c-736a022cc193",
+    "workflowId": "0JQjej3HMT9oMNNF",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "get-trips",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          -80
+        ],
+        "id": "44e3d387-ba6b-4052-b696-c341e7e89d38",
+        "name": "Webhook",
+        "webhookId": "bc470fd7-4935-4a98-afed-7c2ad52238f9"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "documentId": {
+            "__rl": true,
+            "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+            "mode": "list",
+            "cachedResultName": "LINE群組行程表",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1130248658,
+            "mode": "list",
+            "cachedResultName": "Trips",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=1130248658"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          224,
+          -80
+        ],
+        "id": "781cb9c5-fc8d-43ea-9918-5997ce69df94",
+        "name": "Get Trips",
+        "alwaysOutputData": true,
+        "executeOnce": true,
+        "credentials": {
+          "googleApi": {
+            "id": "UiwHn4ZOLTd2DeqY",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "documentId": {
+            "__rl": true,
+            "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+            "mode": "list",
+            "cachedResultName": "LINE群組行程表",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 568127233,
+            "mode": "list",
+            "cachedResultName": "Itinerary",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=568127233"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          448,
+          -80
+        ],
+        "id": "b80a26da-6628-4c60-be36-da30f4386ae3",
+        "name": "Get Itinerary",
+        "alwaysOutputData": true,
+        "executeOnce": true,
+        "credentials": {
+          "googleApi": {
+            "id": "UiwHn4ZOLTd2DeqY",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "documentId": {
+            "__rl": true,
+            "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+            "mode": "list",
+            "cachedResultName": "LINE群組行程表",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1703797554,
+            "mode": "list",
+            "cachedResultName": "Foods",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=1703797554"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          672,
+          -80
+        ],
+        "id": "246a0d79-5c4f-4e2e-84f9-0f1a7f78ae35",
+        "name": "Get Foods",
+        "alwaysOutputData": true,
+        "executeOnce": true,
+        "credentials": {
+          "googleApi": {
+            "id": "UiwHn4ZOLTd2DeqY",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. 從前面的三個節點抓取資料\nconst trips = $items(\"Get Trips\").map(i => i.json);\nconst itineraries = $items(\"Get Itinerary\").map(i => i.json);\nconst foods = $items(\"Get Foods\").map(i => i.json);\n\n// 2. 開始重組資料：只挑選 Status 是 active 的資料夾\nconst formattedTrips = trips.filter(t => t.Status === 'active').map(trip => {\n    \n    // --- 處理行程 (Itinerary) ---\n    // 找出屬於這個 Trip_ID 的所有行程\n    const tripItineraries = itineraries.filter(i => i.Trip_ID === trip.Trip_ID);\n    \n    // 按照 Day_Label (例如 Day 1, Day 2) 分組\n    const daysMap = {};\n    tripItineraries.forEach(item => {\n        if (!daysMap[item.Day_Label]) {\n            daysMap[item.Day_Label] = {\n                id: `day_${item.Day_Label}_${trip.Trip_ID}`, \n                label: item.Day_Label,\n                items: []\n            };\n        }\n        \n        // 塞入單筆行程細節\n        daysMap[item.Day_Label].items.push({\n            id: item.Item_ID,\n            time: item.Time,\n            title: item.Title,\n            desc: item.Desc || '',\n            url: item.URL || '',\n            isHidden: item.Is_Hidden === 'TRUE' || item.Is_Hidden === true, // 處理布林值\n            sortOrder: parseInt(item.Sort_Order) || 99\n        });\n    });\n\n    // 將分組好的天數轉成陣列，並依照時間或 Sort_Order 排序\n    const days = Object.values(daysMap);\n    days.forEach(day => {\n        day.items.sort((a, b) => a.sortOrder - b.sortOrder);\n    });\n\n    // --- 處理美食 (Foods) ---\n    // 找出屬於這個 Trip_ID 的美食\n    const tripFoods = foods.filter(f => f.Trip_ID === trip.Trip_ID).map(f => ({\n        id: f.Food_ID,\n        icon: f.Icon_Key,\n        title: f.Title,\n        desc: f.Desc || '',\n        url: f.URL || ''\n    }));\n\n    // 3. 回傳最終組裝好的這個資料夾\n    return {\n        id: trip.Trip_ID,\n        name: trip.Trip_Name,\n        days: days,\n        foods: tripFoods\n    };\n});\n\n// 4. n8n 最終輸出的格式\nreturn [{ json: { success: true, data: formattedTrips } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          -80
+        ],
+        "id": "63bf49d3-7c1f-4dbd-a6a0-7a82bf93472c",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "update-itinerary",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          32,
+          144
+        ],
+        "id": "e908af20-74d2-4acc-845c-e2dd1dbd7352",
+        "name": "Webhook1",
+        "webhookId": "b505cdd3-2edf-475c-b4e6-218b5152b21d"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "operation": "appendOrUpdate",
+          "documentId": {
+            "__rl": true,
+            "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+            "mode": "list",
+            "cachedResultName": "LINE群組行程表",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 568127233,
+            "mode": "list",
+            "cachedResultName": "Itinerary",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=568127233"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Item_ID": "={{ $json.body.id }}",
+              "Trip_ID": "={{ $json.body.tripId }}",
+              "Day_Label": "={{ $json.body.dayLabel }}",
+              "Time": "={{ $json.body.time}}",
+              "Title": "={{ $json.body.Title }}",
+              "Desc": "={{ $json.body.Desc }}",
+              "URL": "={{ $json.body.url }}",
+              "Is_Hidden": "={{ $json.body.Is_Hidden }}",
+              "Sort_Order": "={{ $json.body.Sort_Order }}"
+            },
+            "matchingColumns": [
+              "Item_ID"
+            ],
+            "schema": [
+              {
+                "id": "Item_ID",
+                "displayName": "Item_ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Trip_ID",
+                "displayName": "Trip_ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Day_Label",
+                "displayName": "Day_Label",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Time",
+                "displayName": "Time",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Title",
+                "displayName": "Title",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Desc",
+                "displayName": "Desc",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "URL",
+                "displayName": "URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Is_Hidden",
+                "displayName": "Is_Hidden",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Sort_Order",
+                "displayName": "Sort_Order",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          240,
+          144
+        ],
+        "id": "7fa2e757-76b0-4ca3-817d-52c95ab713e9",
+        "name": "Append or update row in sheet",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "UiwHn4ZOLTd2DeqY",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "update-trips",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          16,
+          320
+        ],
+        "id": "d390e661-f232-49e8-b2be-4e263661ebce",
+        "name": "Webhook2",
+        "webhookId": "b505cdd3-2edf-475c-b4e6-218b5152b21d"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "operation": "appendOrUpdate",
+          "documentId": {
+            "__rl": true,
+            "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+            "mode": "list",
+            "cachedResultName": "LINE群組行程表",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1130248658,
+            "mode": "list",
+            "cachedResultName": "Trips",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=1130248658"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Trip_ID": "={{ $json.body.Trip_ID }}",
+              "Trip_Name": "={{ $json.body.Trip_Name }}",
+              "Status": "={{ $json.body.Status }}"
+            },
+            "matchingColumns": [
+              "Trip_ID"
+            ],
+            "schema": [
+              {
+                "id": "Trip_ID",
+                "displayName": "Trip_ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Trip_Name",
+                "displayName": "Trip_Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Status",
+                "displayName": "Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          224,
+          320
+        ],
+        "id": "e2e0cce2-b93c-48b3-b5b1-d613a133b7d8",
+        "name": "Append or update row in sheet1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "UiwHn4ZOLTd2DeqY",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "update-food",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          16,
+          480
+        ],
+        "id": "a94f0023-7ea2-44ca-ab08-86d9fa629066",
+        "name": "Webhook3",
+        "webhookId": "b505cdd3-2edf-475c-b4e6-218b5152b21d"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "operation": "appendOrUpdate",
+          "documentId": {
+            "__rl": true,
+            "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+            "mode": "list",
+            "cachedResultName": "LINE群組行程表",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1703797554,
+            "mode": "list",
+            "cachedResultName": "Foods",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=1703797554"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Food_ID": "={{ $json.body.Food_ID }}",
+              "Trip_ID": "={{ $json.body.Trip_ID }}",
+              "Icon_Key": "={{ $json.body.Icon_Key }}",
+              "Title": "={{ $json.body.Title }}",
+              "Desc": "={{ $json.body.Desc }}",
+              "URL": "={{ $json.body.URL }}"
+            },
+            "matchingColumns": [
+              "Food_ID"
+            ],
+            "schema": [
+              {
+                "id": "Food_ID",
+                "displayName": "Food_ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Trip_ID",
+                "displayName": "Trip_ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Icon_Key",
+                "displayName": "Icon_Key",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Title",
+                "displayName": "Title",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Desc",
+                "displayName": "Desc",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "URL",
+                "displayName": "URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          224,
+          480
+        ],
+        "id": "49b42d5b-b56c-4bbe-9c5a-eb9ec81b02e0",
+        "name": "Append or update row in sheet2",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "UiwHn4ZOLTd2DeqY",
+            "name": "Google Sheets account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Get Trips",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Trips": {
+        "main": [
+          [
+            {
+              "node": "Get Itinerary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Itinerary": {
+        "main": [
+          [
+            {
+              "node": "Get Foods",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Foods": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook1": {
+        "main": [
+          [
+            {
+              "node": "Append or update row in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook2": {
+        "main": [
+          [
+            {
+              "node": "Append or update row in sheet1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook3": {
+        "main": [
+          [
+            {
+              "node": "Append or update row in sheet2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Jeremy Lin",
+    "name": "Version 2f586e5a",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}
