@@ -1,0 +1,2119 @@
+{
+  "updatedAt": "2026-03-09T06:22:10.074Z",
+  "createdAt": "2026-03-03T05:36:20.641Z",
+  "id": "5e23AWNM7DUV6Bof",
+  "name": "貓福喵喵",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "6e13e5e0-2d05-43da-8359-679a1d8cab44",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        8
+      ],
+      "id": "d5324599-883f-4956-b91c-f6bdbc293e80",
+      "name": "Webhook",
+      "webhookId": "6e13e5e0-2d05-43da-8359-679a1d8cab44"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "83015820-1b9d-40d1-92dc-8dd4a1136e63",
+              "leftValue": "={{ $json.body.events[0].message.text }}",
+              "rightValue": "@貓福喵喵 ",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        8
+      ],
+      "id": "ce25c572-b45c-4746-bbb6-4c86f021f7f3",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 取得 LINE 傳來的完整訊息與相關資訊\nconst rawText = $input.item.json.body.events[0].message.text;\nconst source = $input.item.json.body.events[0].source;\nconst replyToken = $input.item.json.body.events[0].replyToken;\n\n// 2. 取得群組 ID\nconst groupId = source.groupId || source.userId;\n\n// 3. 移除 \"@貓福喵喵\" 標記\nlet text = rawText.replace('@貓福喵喵', '').trim();\n\nlet action = '';\nlet date = '';\nlet type = '';\nlet theme = '';\nlet time = '';\nlet replyMessage = '';\n\n// 4. 判斷使用者意圖\nif (text.includes('行程')) {\n  action = 'query';\n} else {\n  let isRemove = false;\n  if (text.endsWith('移除')) {\n    isRemove = true;\n    text = text.slice(0, -2).trim(); \n  }\n  \n  const parts = text.split(/\\s+/);\n  \n  if (parts.length < 4) {\n    action = 'error';\n    // 這裡用 \\\\n 是為了確保傳給 JSON 時是正確的轉義字元\n    replyMessage = \"❌ 格式錯誤！請參考格式：\\\\n日期 類型 主題名稱 時間\\\\n(範例：4/3 密室逃脫 絕命旅舍 12:30)\\\\n※ 若要移除請在句尾加上「移除」\\\\n※ 若要查詢行程請直接標記我後輸入「行程」\";\n    \n  } else {\n    const inputDate = parts[0];\n    const inputTime = parts[parts.length - 1];\n    \n    const dateRegex = /^(0?[1-9]|1[0-2])\\/(0?[1-9]|[12][0-9]|3[01])$/;\n    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;\n\n    if (!dateRegex.test(inputDate)) {\n      action = 'error';\n      replyMessage = \"📅 日期格式錯誤！\\\\n請輸入正確的 月/日 (例如 4/3)。\";\n    } else if (!timeRegex.test(inputTime)) {\n      action = 'error';\n      replyMessage = \"⏰ 時間格式錯誤！\\\\n請輸入正確的 時:分 (例如 12:30)。\";\n    } else {\n      action = isRemove ? 'remove' : 'add'; \n      date = inputDate;\n      type = parts[1];\n      time = inputTime;\n      theme = parts.slice(2, -1).join(' '); \n      \n      if (action === 'remove') {\n        replyMessage = `🗑️ 已收到移除指令，準備刪除紀錄：\\\\n${date} ${type} ${theme} ${time}`;\n      } else {\n        replyMessage = `✅ 已添加紀錄：\\\\n${date} ${type} ${theme} ${time}`;\n      }\n    }\n  }\n}\n\nreturn {\n  json: {\n    action, date, type, theme, time, groupId, replyToken, replyMessage, originalText: text\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        8
+      ],
+      "id": "e4a02282-ab2e-4f14-845a-8d48406b4d4b",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "add",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "bffc0280-fbaa-4b01-aa61-7ded3b090e04"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9f909767-26fa-493f-9d51-2b76a27d7b25",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "remove",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "16c106f3-aab4-486a-9326-a6d1247b5b2d",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "query",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "3f7ba597-56f8-48f3-af57-661d6dae6137",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "error",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        -24
+      ],
+      "id": "b5d2835e-3639-4fbb-b656-ad217d51a427",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "工作表1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "群組ID": "={{ $json.groupId }}",
+            "日期": "={{ $json.date }}",
+            "類型": "={{ $json.type }}",
+            "主題名稱": "={{ $json.theme }}",
+            "時間": "={{ $json.time }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "群組ID",
+              "displayName": "群組ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "日期",
+              "displayName": "日期",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "類型",
+              "displayName": "類型",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "主題名稱",
+              "displayName": "主題名稱",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "時間",
+              "displayName": "時間",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1568,
+        -400
+      ],
+      "id": "f0c28c0d-4cce-4401-9a60-ee439e2aeed1",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "UiwHn4ZOLTd2DeqY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/reply",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer MjELS9/6QObLO/buNg7qI6QbNhU4U06RY2vg3JgWh3HS1g2foTvs+MsTHPfornlNkngaxczNRApSw1n8t8QzTwbra5w+cMf5tFEloNvRoqcGBfHg76FE2DibIasVXmymcB8TDXP5E7OeRk0YgoPucAdB04t89/1O/w1cDnyilFU="
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"replyToken\": \"{{ $json.replyToken }}\",\n  \"messages\": [\n    {\n      \"type\": \"text\",\n      \"text\": \"{{ $json.replyMessage }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2016,
+        -208
+      ],
+      "id": "9f97bc06-30d0-4bd3-8d27-e0cd285ff1c3",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+          "mode": "list",
+          "cachedResultName": "LINE群組行程表",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "工作表1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=0"
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1568,
+        -16
+      ],
+      "id": "194f7822-8caf-4245-8011-02bff6d2336c",
+      "name": "Delete rows or columns from sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "UiwHn4ZOLTd2DeqY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 正確回頭抓取「大腦節點」的原始資料 (找回被洗掉的 date, theme, replyToken)\n// 注意：請確保引號裡的名字跟你畫布上的大腦節點完全一樣\nconst originalData = $('Code in JavaScript').first().json;\n\n// 2. 抓取剛才 Google Sheets 查到的結果\nconst sheetResults = $input.all();\n\n// 3. 判斷是否有查到「真正的」資料 (檢查裡面有沒有 '日期' 這個欄位)\nconst hasRealData = sheetResults.length > 0 && sheetResults[0].json[\"日期\"];\n\nif (hasRealData) {\n  // 🚨 情況 A：Google Sheets 真的有找到資料！代表「重複了」\n  return [{\n    json: {\n      replyToken: originalData.replyToken,\n      replyMessage: `⚠️ 哎呀！${originalData.date} 的「${originalData.theme}」已經在行程表裡了喵！🐾`,\n      status: \"duplicate\" // 給下一個節點的路標\n    }\n  }];\n} else {\n  // ✅ 情況 B：Google Sheets 沒找到，是空殼！代表可以新增\n  // 使用 JavaScript 的展開語法 (...) 把 originalData 原封不動完美繼承下來\n  return [{\n    json: {\n      ...originalData,\n      status: \"new_item\" // 給下一個節點的路標\n    }\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        -328
+      ],
+      "id": "c05943f1-f341-4cbf-bbfc-dc9c9f17a4a6",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 強行回溯到最源頭的 Webhook 把 Token 抓回來\nconst webhookData = $('Webhook').first().json;\nconst replyToken = webhookData.body.events[0].replyToken;\n\n// 2. 回溯到「大腦節點」把解析好的行程細節抓回來\n// (注意：確保這裡的名字跟你畫布上的大腦節點完全一樣)\nconst brainData = $('Code in JavaScript').first().json;\n\n// 3. 重新包裝成 HTTP Request 看得懂的格式\nreturn [{\n  json: {\n    replyToken: replyToken,\n    replyMessage: `✅ 已成功添加新紀錄喵！🐾\\\\n${brainData.date} ${brainData.theme} ${brainData.time}`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        -400
+      ],
+      "id": "e0249d71-3078-4638-866e-c0d01a960541",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+          "mode": "list",
+          "cachedResultName": "LINE群組行程表",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "工作表1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "日期",
+              "lookupValue": "={{ $('Code in JavaScript').item.json.date }}"
+            },
+            {
+              "lookupColumn": "主題名稱",
+              "lookupValue": "={{ $('Code in JavaScript').item.json.theme }}"
+            },
+            {
+              "lookupColumn": "群組ID",
+              "lookupValue": "={{ $('Code in JavaScript').item.json.groupId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        -328
+      ],
+      "id": "d6e6331d-0e51-4d4f-86ac-fa208164eef2",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "UiwHn4ZOLTd2DeqY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+          "mode": "list",
+          "cachedResultName": "LINE群組行程表",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "工作表1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "群組ID",
+              "lookupValue": "={{ $('Code in JavaScript').item.json.groupId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        104
+      ],
+      "id": "2af968a7-75a1-4d8d-b77b-bcb33d7ce54e",
+      "name": "Get row(s) in sheet1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "UiwHn4ZOLTd2DeqY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+          "mode": "list",
+          "cachedResultName": "LINE群組行程表",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "工作表1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "日期",
+              "lookupValue": "={{ $('Code in JavaScript').item.json.date }}"
+            },
+            {
+              "lookupColumn": "主題名稱",
+              "lookupValue": "={{ $('Code in JavaScript').item.json.theme }}"
+            },
+            {
+              "lookupColumn": "群組ID",
+              "lookupValue": "={{ $('Code in JavaScript').item.json.groupId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        -88
+      ],
+      "id": "89f5f6f7-ab84-4674-87f2-1bd3075adcfb",
+      "name": "Get row(s) in sheet2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "UiwHn4ZOLTd2DeqY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 正確回頭抓取「大腦節點」的原始資料 (找回被洗掉的 date, theme, replyToken)\n// 注意：請確保引號裡的名字跟你畫布上的大腦節點完全一樣\nconst originalData = $('Code in JavaScript').first().json;\n\n// 2. 抓取剛才 Google Sheets 查到的結果\nconst sheetResults = $input.all();\n\n// 3. 判斷是否有查到「真正的」資料 (檢查裡面有沒有 '日期' 這個欄位)\nconst hasRealData = sheetResults.length > 0 && sheetResults[0].json[\"日期\"];\n\nif (hasRealData) {\n  // ✅ 情況 A：Google Sheets 有找到資料！代表「可以刪除」\n  // 使用展開語法 (...) 繼承 originalData，並額外塞入試算表的 row_number\n  return [{\n    json: {\n      ...originalData,\n      row_number: sheetResults[0].json.row_number, // 抓取要刪除的行號，給下一個 Delete 節點用\n      status: \"delete_item\" // 給下一個 IF/Switch 節點的路標\n    }\n  }];\n} else {\n  // 🚨 情況 B：Google Sheets 沒找到資料！代表「無東西可刪」\n  return [{\n    json: {\n      replyToken: originalData.replyToken,\n      replyMessage: `⚠️ 找不到 ${originalData.date} 的「${originalData.theme}」可以刪除喔！確認一下有沒有打錯喵！🐾`,\n      status: \"not_found\" // 給下一個 IF/Switch 節點的路標\n    }\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        -88
+      ],
+      "id": "c8457ff7-d9d9-4eed-a6de-c4968322fcd3",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 強行回溯到最源頭的 Webhook 把 Token 抓回來\nconst webhookData = $('Webhook').first().json;\nconst replyToken = webhookData.body.events[0].replyToken;\n\n// 2. 回溯到「大腦節點」把解析好的行程細節抓回來\n// (注意：確保這裡的名字跟你畫布上的大腦節點完全一樣)\nconst brainData = $('Code in JavaScript').first().json;\n\n// 3. 重新包裝成 HTTP Request 看得懂的格式\nreturn [{\n  json: {\n    replyToken: replyToken,\n    replyMessage: `✅ 已成功刪除紀錄喵！🐾\\\\n${brainData.date} ${brainData.theme} ${brainData.time}`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        -16
+      ],
+      "id": "9995fe5d-e1f6-4711-85e9-a53ae1637bba",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b8105342-5bd7-4279-bde5-f3675ea0da1d",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "=not_found",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        -88
+      ],
+      "id": "c3d4bb18-432d-4c47-96b6-5bde41a7ff00",
+      "name": "判斷是否已有行程"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b8105342-5bd7-4279-bde5-f3675ea0da1d",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "=new_item",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        -328
+      ],
+      "id": "d111ddfb-d5ad-4a7d-822b-d892c84682ae",
+      "name": "判斷是否尚未添加行程"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 先抓取 Webhook 的 Token\nconst webhook = $node[\"Webhook\"]; \nconst replyToken = webhook.json.body.events[0].replyToken;\n\n// 2. 抓取 Google Sheets 傳進來的所有資料\nconst items = [...$input.all()];\n\n// 🛠️ 智能補零函式\nfunction padZero(str) {\n  if (!str) return \"\";\n  return String(str).replace(/\\b(\\d)\\b/g, '0$1');\n}\n\n// 📅 【更新】動態產生 Google 日曆連結 (加入客製化備註提醒)\nfunction makeGCalUrl(title, dateStr, timeStr, type, originalDesc) {\n  const year = new Date().getFullYear();\n  const parts = (dateStr || '').split('/');\n  const m = (parts[0] || '01').padStart(2, '0');\n  const d = (parts[1] || '01').padStart(2, '0');\n  \n  const tParts = (timeStr || '').split(':');\n  const h = (tParts[0] || '00').padStart(2, '0');\n  const min = (tParts[1] || '00').padStart(2, '0');\n  \n  const start = `${year}${m}${d}T${h}${min}00`;\n  \n  // 預設行程為 1 小時\n  let endH = parseInt(h) + 1;\n  let endMin = min;\n  if (endH >= 24) { endH = 23; endMin = '59'; } \n  const end = `${year}${m}${d}T${String(endH).padStart(2, '0')}${endMin}00`;\n  \n  // 💡 魔法在這裡：根據類型，幫 Google 日曆的「備註欄」預先寫好提醒建議\n  let reminderNote = \"\";\n  if (title.includes('密室') || (type || '').includes('遊戲') || (type || '').includes('娛樂')) {\n    reminderNote = \"🔔 【系統溫馨提示】：這是密室逃脫行程！儲存前請記得在上方手動新增「1天前」與「7天前」的通知鬧鐘喔！\\n\\n\";\n  } else {\n    reminderNote = \"🔔 【系統溫馨提示】：點擊儲存前，記得確認是否有設定「1天前」的通知鬧鐘喔！\\n\\n\";\n  }\n  \n  // 把我們的提示，跟原本 Google Sheets 裡的備註接在一起 (如果有的話)\n  const finalDesc = reminderNote + (originalDesc || '');\n\n  // 產生網址並套用跳轉原生 App 咒語\n  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(finalDesc)}&openExternalBrowser=1`;\n}\n\n// 🌟 將資料按照「補零後的 日期+時間」進行排序\nitems.sort((a, b) => {\n  const dateA = padZero(a.json.日期);\n  const dateB = padZero(b.json.日期);\n  const timeA = padZero(a.json.時間);\n  const timeB = padZero(b.json.時間);\n  return `${dateA} ${timeA}`.localeCompare(`${dateB} ${timeB}`);\n});\n\n// ==========================================\n// 🎨 開始組裝 Flex Message 內容\n// ==========================================\nconst flexRows = [];\n\nif (items.length === 0 || !items[0].json.日期) {\n  flexRows.push({\n    \"type\": \"text\",\n    \"text\": \"目前沒有任何行程喔喵！🐾\",\n    \"size\": \"md\",\n    \"color\": \"#888888\",\n    \"align\": \"center\"\n  });\n} else {\n  for (const item of items) {\n    const data = item.json;\n    if (data.日期) {\n      const displayDate = padZero(data.日期);\n      const displayTime = padZero(data.時間);\n      const displayType = data.類型 || \"\"; \n      const displayTitle = data.主題名稱 || \"\"; \n      // 確保抓取到 Google Sheets 裡的原本備註\n      const displayDesc = data.備註 || data.Desc || \"\"; \n      \n      const fullTitle = [displayType, displayTitle].filter(Boolean).join(' ');\n\n      // 👉 將類型與備註傳入，判斷是否為密室逃脫\n      const gcalUrl = makeGCalUrl(fullTitle, data.日期, data.時間, displayType, displayDesc);\n\n      flexRows.push({\n        \"type\": \"box\",\n        \"layout\": \"baseline\",\n        \"spacing\": \"sm\",\n        \"action\": {\n          \"type\": \"uri\",\n          \"uri\": gcalUrl \n        },\n        \"contents\": [\n          {\n            \"type\": \"text\",\n            \"text\": `${displayDate} ${displayTime}`,\n            \"color\": \"#8c8c8c\",\n            \"size\": \"sm\",\n            \"flex\": 4\n          },\n          {\n            \"type\": \"text\",\n            \"text\": fullTitle,\n            \"wrap\": true,\n            \"color\": \"#2c3e50\",\n            \"size\": \"sm\",\n            \"weight\": \"bold\",\n            \"flex\": 5\n          },\n          {\n            \"type\": \"text\",\n            \"text\": \"➕\", \n            \"size\": \"xs\",\n            \"color\": \"#3498db\",\n            \"align\": \"end\",\n            \"flex\": 1\n          }\n        ]\n      });\n    }\n  }\n}\n\n// ==========================================\n// 📦 封裝成 LINE Flex 卡片\n// ==========================================\nconst flexMessage = {\n  \"type\": \"flex\",\n  \"altText\": \"📅 您的行程清單已送達！\",\n  \"contents\": {\n    \"type\": \"bubble\",\n    \"size\": \"mega\",\n    \"header\": {\n      \"type\": \"box\",\n      \"layout\": \"vertical\",\n      \"contents\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"✈️ 行程表\",\n          \"weight\": \"bold\",\n          \"color\": \"#3498db\",\n          \"size\": \"lg\"\n        }\n      ]\n    },\n    \"body\": {\n      \"type\": \"box\",\n      \"layout\": \"vertical\",\n      \"spacing\": \"md\",\n      \"contents\": flexRows\n    },\n    \"footer\": {\n      \"type\": \"box\",\n      \"layout\": \"vertical\",\n      \"contents\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"💡 點擊行程即可一鍵加入行事曆\",\n          \"color\": \"#aaaaaa\",\n          \"size\": \"xs\",\n          \"align\": \"center\"\n        }\n      ]\n    }\n  }\n};\n\n// 回傳\nreturn [{\n  json: {\n    linePayload: {\n      \"replyToken\": replyToken,\n      \"messages\": [ flexMessage ]\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        104
+      ],
+      "id": "d48b8da5-cca2-40ea-b35a-9a73dff77140",
+      "name": "卡片版"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/reply",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer MjELS9/6QObLO/buNg7qI6QbNhU4U06RY2vg3JgWh3HS1g2foTvs+MsTHPfornlNkngaxczNRApSw1n8t8QzTwbra5w+cMf5tFEloNvRoqcGBfHg76FE2DibIasVXmymcB8TDXP5E7OeRk0YgoPucAdB04t89/1O/w1cDnyilFU="
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.linePayload }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1344,
+        104
+      ],
+      "id": "7579d80e-c321-4ed8-93b9-3d0f334c5525",
+      "name": "卡片版專屬回應"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 先抓取 Webhook 的 Token (最穩定的來源)\nconst webhook = $node[\"Webhook\"]; \nconst replyToken = webhook.json.body.events[0].replyToken;\n\n// 2. 抓取 Google Sheets 傳進來的所有資料，並複製一份準備排序\nconst items = [...$input.all()];\n\n// 🛠️ 新增：智能補零函式 (Zero-padding)\n// 把 \"4/3\" 變成 \"04/03\"，把 \"9:00\" 變成 \"09:00\"\nfunction padZero(str) {\n  if (!str) return \"\";\n  // \\b(\\d)\\b 會精準抓出被符號包圍的「單一個數字」，並在它前面加上 0\n  return String(str).replace(/\\b(\\d)\\b/g, '0$1');\n}\n\n// ==========================================\n// 🌟 新增：將資料按照「補零後的 日期+時間」進行排序\n// ==========================================\nitems.sort((a, b) => {\n  // 將拿到的資料先經過 padZero 處理\n  const dateA = padZero(a.json.日期);\n  const dateB = padZero(b.json.日期);\n  const timeA = padZero(a.json.時間);\n  const timeB = padZero(b.json.時間);\n\n  // 組合起來會變成像 \"04/03 09:00\" 這種非常標準的格式\n  const dateTimeA = `${dateA} ${timeA}`;\n  const dateTimeB = `${dateB} ${timeB}`;\n\n  // 這樣字串比對就 100% 不會因為位數不同而排錯了！\n  return dateTimeA.localeCompare(dateTimeB);\n});\n// ==========================================\n\nlet scheduleText = \"\";\n\n// 3. 判斷資料：如果沒有 item，或者是空的 Google Sheets 物件\nif (items.length === 0 || !items[0].json.日期) {\n  scheduleText = \"目前沒有任何行程喔喵！🐾\";\n} else {\n  scheduleText = \"📅 目前的行程清單：\\\\n\";\n  \n  // 遍歷所有排好序的行程\n  for (const item of items) {\n    const data = item.json;\n    if (data.日期) {\n      const displayDate = padZero(data.日期);\n      const displayTime = padZero(data.時間);\n      const displayType = data.類型 || \"\"; // 🌟 新增抓取類型\n      const displayTitle = data.主題名稱 || \"\"; \n      \n      // 🌟 依照新順序：日期 -> 時間 -> 類型 -> 主題\n      // 使用 .filter(Boolean).join(' ') 可以自動把空值濾掉並完美用一個空格連接，預防多餘空白\n      const rowText = [displayDate, displayTime, displayType, displayTitle].filter(Boolean).join(' ');\n      \n      scheduleText += `• ${rowText}\\\\n`;\n    }\n  }\n  scheduleText += \"\\\\n記得準時參加喔喵！\";\n}\n\n// 4. 【核心關鍵】不論前面有多少資料，這裡只會輸出一筆固定的 JSON\nreturn [{\n  json: {\n    replyToken: replyToken,\n    replyMessage: scheduleText,\n    action: \"query\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        744
+      ],
+      "id": "8e073c70-4024-47ad-8bbf-7b14928e8167",
+      "name": "行程code , 舊版不再使用"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/reply",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer MjELS9/6QObLO/buNg7qI6QbNhU4U06RY2vg3JgWh3HS1g2foTvs+MsTHPfornlNkngaxczNRApSw1n8t8QzTwbra5w+cMf5tFEloNvRoqcGBfHg76FE2DibIasVXmymcB8TDXP5E7OeRk0YgoPucAdB04t89/1O/w1cDnyilFU="
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"replyToken\": \"{{ $('Code in JavaScript').item.json.replyToken }}\",\n  \"messages\": [\n    {\n      \"type\": \"text\",\n      \"text\": \"{{ $('Code in JavaScript').item.json.replyMessage }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        896,
+        296
+      ],
+      "id": "0d5dd031-94a7-495f-97dd-cb4f1114799d",
+      "name": "格式錯誤檢查"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 15
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        520
+      ],
+      "id": "55ad3238-b534-4baa-a37e-091d9a13aa1a",
+      "name": "Schedule Trigger",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+          "mode": "list",
+          "cachedResultName": "LINE群組行程表",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "工作表1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "群組ID",
+              "lookupValue": "=Cd21ef67f319f49d45abbd520175a9a82"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        520
+      ],
+      "id": "4a9b111b-08c9-4dff-9dd6-11d5b35cbb0a",
+      "name": "Get row(s) in sheet3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "UiwHn4ZOLTd2DeqY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 取得台灣時間的「今天」與「七天後」\nconst now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));\nnow.setHours(0, 0, 0, 0); \n\nconst sevenDaysLater = new Date(now);\nsevenDaysLater.setDate(now.getDate() + 7);\n\n// 🛠️ 改良日期解析：確保年份正確\nfunction parseDate(dateStr) {\n  if (!dateStr) return null;\n  const year = new Date().getFullYear();\n  const parts = dateStr.split('/'); // 處理 \"3/14\"\n  return new Date(year, parseInt(parts[0]) - 1, parseInt(parts[1]), 0, 0, 0);\n}\n\nfunction padZero(str) {\n  if (!str) return \"\";\n  return String(str).replace(/\\b(\\d)\\b/g, '0$1');\n}\n\n// 2. 抓取資料\nconst items = [...$input.all()];\nconst upcomingItems = [];\n\n// 3. 篩選未來 7 天內 (包含今天)\nfor (const item of items) {\n  const data = item.json;\n  const eventDate = parseDate(data.日期);\n  \n  if (eventDate && eventDate >= now && eventDate <= sevenDaysLater) {\n    upcomingItems.push(data);\n  }\n}\n\n// 🌟 【修正 1】如果 7 天內沒行程，直接 return 空，讓 Webhook 不會噴發\nif (upcomingItems.length === 0) {\n  return []; \n}\n\n// 4. 排序\nupcomingItems.sort((a, b) => {\n  const dateA = padZero(a.日期);\n  const dateB = padZero(b.日期);\n  const timeA = padZero(a.時間);\n  const timeB = padZero(b.時間);\n  return `${dateA} ${timeA}`.localeCompare(`${dateB} ${timeB}`);\n});\n\n// 5. 組裝 Flex Rows\nconst flexRows = upcomingItems.map(data => {\n  const fullTitle = [data.類型, data.主題名稱].filter(Boolean).join(' ');\n  return {\n    \"type\": \"box\",\n    \"layout\": \"baseline\",\n    \"spacing\": \"sm\",\n    \"contents\": [\n      { \"type\": \"text\", \"text\": `${padZero(data.日期)} ${padZero(data.時間)}`, \"color\": \"#8c8c8c\", \"size\": \"sm\", \"flex\": 4 },\n      { \"type\": \"text\", \"text\": fullTitle, \"wrap\": true, \"color\": \"#2c3e50\", \"size\": \"sm\", \"weight\": \"bold\", \"flex\": 6 }\n    ]\n  };\n});\nconst targetGroupId = upcomingItems[0][\"群組ID\"] || \"你的預設ID\";\n// 6. 回傳 Push 格式\nreturn [{\n  json: {\n    pushPayload: {\n      \"to\": targetGroupId, // 記得確認你的目標 ID\n      \"messages\": [\n        {\n          \"type\": \"flex\",\n          \"altText\": \"📅 即將到來的行程\",\n          \"contents\": {\n            \"type\": \"bubble\",\n            \"size\": \"mega\",\n            \"header\": {\n              \"type\": \"box\",\n              \"layout\": \"vertical\",\n              \"contents\": [{ \"type\": \"text\", \"text\": \"🔔 即將到來的行程\", \"weight\": \"bold\", \"color\": \"#e74c3c\", \"size\": \"lg\" }]\n            },\n            \"body\": {\n              \"type\": \"box\",\n              \"layout\": \"vertical\",\n              \"spacing\": \"md\",\n              \"contents\": flexRows\n            }\n          }\n        }\n      ]\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        520
+      ],
+      "id": "d5bf6872-ca0a-48ed-a6bf-95cacf33dc9b",
+      "name": "卡片版1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/push",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer MjELS9/6QObLO/buNg7qI6QbNhU4U06RY2vg3JgWh3HS1g2foTvs+MsTHPfornlNkngaxczNRApSw1n8t8QzTwbra5w+cMf5tFEloNvRoqcGBfHg76FE2DibIasVXmymcB8TDXP5E7OeRk0YgoPucAdB04t89/1O/w1cDnyilFU="
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.pushPayload }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        672,
+        520
+      ],
+      "id": "faf894e7-c360-433c-b22f-8ee7166f4495",
+      "name": "卡片版專屬回應1"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row(s) in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "格式錯誤檢查",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete rows or columns from sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "判斷是否尚未添加行程",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "卡片版",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "判斷是否已有行程",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判斷是否已有行程": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete rows or columns from sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判斷是否尚未添加行程": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "卡片版": {
+      "main": [
+        [
+          {
+            "node": "卡片版專屬回應",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "行程code , 舊版不再使用": {
+      "main": [
+        []
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet3": {
+      "main": [
+        [
+          {
+            "node": "卡片版1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "卡片版1": {
+      "main": [
+        [
+          {
+            "node": "卡片版專屬回應1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "6a640b2c-c8f6-4676-b59b-ae1b54840d43",
+  "activeVersionId": "6a640b2c-c8f6-4676-b59b-ae1b54840d43",
+  "triggerCount": 2,
+  "shared": [
+    {
+      "updatedAt": "2026-03-03T05:36:20.641Z",
+      "createdAt": "2026-03-03T05:36:20.641Z",
+      "role": "workflow:owner",
+      "workflowId": "5e23AWNM7DUV6Bof",
+      "projectId": "V1MDW5aV3riAJAHp"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-03-09T06:22:13.466Z",
+    "createdAt": "2026-03-09T06:22:10.076Z",
+    "versionId": "6a640b2c-c8f6-4676-b59b-ae1b54840d43",
+    "workflowId": "5e23AWNM7DUV6Bof",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "6e13e5e0-2d05-43da-8359-679a1d8cab44",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          8
+        ],
+        "id": "d5324599-883f-4956-b91c-f6bdbc293e80",
+        "name": "Webhook",
+        "webhookId": "6e13e5e0-2d05-43da-8359-679a1d8cab44"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "83015820-1b9d-40d1-92dc-8dd4a1136e63",
+                "leftValue": "={{ $json.body.events[0].message.text }}",
+                "rightValue": "@貓福喵喵 ",
+                "operator": {
+                  "type": "string",
+                  "operation": "startsWith"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          224,
+          8
+        ],
+        "id": "ce25c572-b45c-4746-bbb6-4c86f021f7f3",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. 取得 LINE 傳來的完整訊息與相關資訊\nconst rawText = $input.item.json.body.events[0].message.text;\nconst source = $input.item.json.body.events[0].source;\nconst replyToken = $input.item.json.body.events[0].replyToken;\n\n// 2. 取得群組 ID\nconst groupId = source.groupId || source.userId;\n\n// 3. 移除 \"@貓福喵喵\" 標記\nlet text = rawText.replace('@貓福喵喵', '').trim();\n\nlet action = '';\nlet date = '';\nlet type = '';\nlet theme = '';\nlet time = '';\nlet replyMessage = '';\n\n// 4. 判斷使用者意圖\nif (text.includes('行程')) {\n  action = 'query';\n} else {\n  let isRemove = false;\n  if (text.endsWith('移除')) {\n    isRemove = true;\n    text = text.slice(0, -2).trim(); \n  }\n  \n  const parts = text.split(/\\s+/);\n  \n  if (parts.length < 4) {\n    action = 'error';\n    // 這裡用 \\\\n 是為了確保傳給 JSON 時是正確的轉義字元\n    replyMessage = \"❌ 格式錯誤！請參考格式：\\\\n日期 類型 主題名稱 時間\\\\n(範例：4/3 密室逃脫 絕命旅舍 12:30)\\\\n※ 若要移除請在句尾加上「移除」\\\\n※ 若要查詢行程請直接標記我後輸入「行程」\";\n    \n  } else {\n    const inputDate = parts[0];\n    const inputTime = parts[parts.length - 1];\n    \n    const dateRegex = /^(0?[1-9]|1[0-2])\\/(0?[1-9]|[12][0-9]|3[01])$/;\n    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;\n\n    if (!dateRegex.test(inputDate)) {\n      action = 'error';\n      replyMessage = \"📅 日期格式錯誤！\\\\n請輸入正確的 月/日 (例如 4/3)。\";\n    } else if (!timeRegex.test(inputTime)) {\n      action = 'error';\n      replyMessage = \"⏰ 時間格式錯誤！\\\\n請輸入正確的 時:分 (例如 12:30)。\";\n    } else {\n      action = isRemove ? 'remove' : 'add'; \n      date = inputDate;\n      type = parts[1];\n      time = inputTime;\n      theme = parts.slice(2, -1).join(' '); \n      \n      if (action === 'remove') {\n        replyMessage = `🗑️ 已收到移除指令，準備刪除紀錄：\\\\n${date} ${type} ${theme} ${time}`;\n      } else {\n        replyMessage = `✅ 已添加紀錄：\\\\n${date} ${type} ${theme} ${time}`;\n      }\n    }\n  }\n}\n\nreturn {\n  json: {\n    action, date, type, theme, time, groupId, replyToken, replyMessage, originalText: text\n  }\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          448,
+          8
+        ],
+        "id": "e4a02282-ab2e-4f14-845a-8d48406b4d4b",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "add",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "bffc0280-fbaa-4b01-aa61-7ded3b090e04"
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "9f909767-26fa-493f-9d51-2b76a27d7b25",
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "remove",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "16c106f3-aab4-486a-9326-a6d1247b5b2d",
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "query",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "3f7ba597-56f8-48f3-af57-661d6dae6137",
+                      "leftValue": "={{ $json.action }}",
+                      "rightValue": "error",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          672,
+          -24
+        ],
+        "id": "b5d2835e-3639-4fbb-b656-ad217d51a427",
+        "name": "Switch"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?gid=0#gid=0",
+            "mode": "url"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "工作表1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "群組ID": "={{ $json.groupId }}",
+              "日期": "={{ $json.date }}",
+              "類型": "={{ $json.type }}",
+              "主題名稱": "={{ $json.theme }}",
+              "時間": "={{ $json.time }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "群組ID",
+                "displayName": "群組ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "日期",
+                "displayName": "日期",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "類型",
+                "displayName": "類型",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "主題名稱",
+                "displayName": "主題名稱",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "時間",
+                "displayName": "時間",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1568,
+          -400
+        ],
+        "id": "f0c28c0d-4cce-4401-9a60-ee439e2aeed1",
+        "name": "Append row in sheet",
+        "credentials": {
+          "googleApi": {
+            "id": "UiwHn4ZOLTd2DeqY",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.line.me/v2/bot/message/reply",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer MjELS9/6QObLO/buNg7qI6QbNhU4U06RY2vg3JgWh3HS1g2foTvs+MsTHPfornlNkngaxczNRApSw1n8t8QzTwbra5w+cMf5tFEloNvRoqcGBfHg76FE2DibIasVXmymcB8TDXP5E7OeRk0YgoPucAdB04t89/1O/w1cDnyilFU="
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"replyToken\": \"{{ $json.replyToken }}\",\n  \"messages\": [\n    {\n      \"type\": \"text\",\n      \"text\": \"{{ $json.replyMessage }}\"\n    }\n  ]\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2016,
+          -208
+        ],
+        "id": "9f97bc06-30d0-4bd3-8d27-e0cd285ff1c3",
+        "name": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "operation": "delete",
+          "documentId": {
+            "__rl": true,
+            "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+            "mode": "list",
+            "cachedResultName": "LINE群組行程表",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "工作表1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=0"
+          }
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1568,
+          -16
+        ],
+        "id": "194f7822-8caf-4245-8011-02bff6d2336c",
+        "name": "Delete rows or columns from sheet",
+        "credentials": {
+          "googleApi": {
+            "id": "UiwHn4ZOLTd2DeqY",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. 正確回頭抓取「大腦節點」的原始資料 (找回被洗掉的 date, theme, replyToken)\n// 注意：請確保引號裡的名字跟你畫布上的大腦節點完全一樣\nconst originalData = $('Code in JavaScript').first().json;\n\n// 2. 抓取剛才 Google Sheets 查到的結果\nconst sheetResults = $input.all();\n\n// 3. 判斷是否有查到「真正的」資料 (檢查裡面有沒有 '日期' 這個欄位)\nconst hasRealData = sheetResults.length > 0 && sheetResults[0].json[\"日期\"];\n\nif (hasRealData) {\n  // 🚨 情況 A：Google Sheets 真的有找到資料！代表「重複了」\n  return [{\n    json: {\n      replyToken: originalData.replyToken,\n      replyMessage: `⚠️ 哎呀！${originalData.date} 的「${originalData.theme}」已經在行程表裡了喵！🐾`,\n      status: \"duplicate\" // 給下一個節點的路標\n    }\n  }];\n} else {\n  // ✅ 情況 B：Google Sheets 沒找到，是空殼！代表可以新增\n  // 使用 JavaScript 的展開語法 (...) 把 originalData 原封不動完美繼承下來\n  return [{\n    json: {\n      ...originalData,\n      status: \"new_item\" // 給下一個節點的路標\n    }\n  }];\n}"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          -328
+        ],
+        "id": "c05943f1-f341-4cbf-bbfc-dc9c9f17a4a6",
+        "name": "Code in JavaScript2"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. 強行回溯到最源頭的 Webhook 把 Token 抓回來\nconst webhookData = $('Webhook').first().json;\nconst replyToken = webhookData.body.events[0].replyToken;\n\n// 2. 回溯到「大腦節點」把解析好的行程細節抓回來\n// (注意：確保這裡的名字跟你畫布上的大腦節點完全一樣)\nconst brainData = $('Code in JavaScript').first().json;\n\n// 3. 重新包裝成 HTTP Request 看得懂的格式\nreturn [{\n  json: {\n    replyToken: replyToken,\n    replyMessage: `✅ 已成功添加新紀錄喵！🐾\\\\n${brainData.date} ${brainData.theme} ${brainData.time}`\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1792,
+          -400
+        ],
+        "id": "e0249d71-3078-4638-866e-c0d01a960541",
+        "name": "Code in JavaScript3"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "documentId": {
+            "__rl": true,
+            "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+            "mode": "list",
+            "cachedResultName": "LINE群組行程表",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "工作表1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=0"
+          },
+          "filtersUI": {
+            "values": [
+              {
+                "lookupColumn": "日期",
+                "lookupValue": "={{ $('Code in JavaScript').item.json.date }}"
+              },
+              {
+                "lookupColumn": "主題名稱",
+                "lookupValue": "={{ $('Code in JavaScript').item.json.theme }}"
+              },
+              {
+                "lookupColumn": "群組ID",
+                "lookupValue": "={{ $('Code in JavaScript').item.json.groupId }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          896,
+          -328
+        ],
+        "id": "d6e6331d-0e51-4d4f-86ac-fa208164eef2",
+        "name": "Get row(s) in sheet",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "UiwHn4ZOLTd2DeqY",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "documentId": {
+            "__rl": true,
+            "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+            "mode": "list",
+            "cachedResultName": "LINE群組行程表",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "工作表1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=0"
+          },
+          "filtersUI": {
+            "values": [
+              {
+                "lookupColumn": "群組ID",
+                "lookupValue": "={{ $('Code in JavaScript').item.json.groupId }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          896,
+          104
+        ],
+        "id": "2af968a7-75a1-4d8d-b77b-bcb33d7ce54e",
+        "name": "Get row(s) in sheet1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "UiwHn4ZOLTd2DeqY",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "documentId": {
+            "__rl": true,
+            "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+            "mode": "list",
+            "cachedResultName": "LINE群組行程表",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "工作表1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=0"
+          },
+          "filtersUI": {
+            "values": [
+              {
+                "lookupColumn": "日期",
+                "lookupValue": "={{ $('Code in JavaScript').item.json.date }}"
+              },
+              {
+                "lookupColumn": "主題名稱",
+                "lookupValue": "={{ $('Code in JavaScript').item.json.theme }}"
+              },
+              {
+                "lookupColumn": "群組ID",
+                "lookupValue": "={{ $('Code in JavaScript').item.json.groupId }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          896,
+          -88
+        ],
+        "id": "89f5f6f7-ab84-4674-87f2-1bd3075adcfb",
+        "name": "Get row(s) in sheet2",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "UiwHn4ZOLTd2DeqY",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. 正確回頭抓取「大腦節點」的原始資料 (找回被洗掉的 date, theme, replyToken)\n// 注意：請確保引號裡的名字跟你畫布上的大腦節點完全一樣\nconst originalData = $('Code in JavaScript').first().json;\n\n// 2. 抓取剛才 Google Sheets 查到的結果\nconst sheetResults = $input.all();\n\n// 3. 判斷是否有查到「真正的」資料 (檢查裡面有沒有 '日期' 這個欄位)\nconst hasRealData = sheetResults.length > 0 && sheetResults[0].json[\"日期\"];\n\nif (hasRealData) {\n  // ✅ 情況 A：Google Sheets 有找到資料！代表「可以刪除」\n  // 使用展開語法 (...) 繼承 originalData，並額外塞入試算表的 row_number\n  return [{\n    json: {\n      ...originalData,\n      row_number: sheetResults[0].json.row_number, // 抓取要刪除的行號，給下一個 Delete 節點用\n      status: \"delete_item\" // 給下一個 IF/Switch 節點的路標\n    }\n  }];\n} else {\n  // 🚨 情況 B：Google Sheets 沒找到資料！代表「無東西可刪」\n  return [{\n    json: {\n      replyToken: originalData.replyToken,\n      replyMessage: `⚠️ 找不到 ${originalData.date} 的「${originalData.theme}」可以刪除喔！確認一下有沒有打錯喵！🐾`,\n      status: \"not_found\" // 給下一個 IF/Switch 節點的路標\n    }\n  }];\n}"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          -88
+        ],
+        "id": "c8457ff7-d9d9-4eed-a6de-c4968322fcd3",
+        "name": "Code in JavaScript4"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. 強行回溯到最源頭的 Webhook 把 Token 抓回來\nconst webhookData = $('Webhook').first().json;\nconst replyToken = webhookData.body.events[0].replyToken;\n\n// 2. 回溯到「大腦節點」把解析好的行程細節抓回來\n// (注意：確保這裡的名字跟你畫布上的大腦節點完全一樣)\nconst brainData = $('Code in JavaScript').first().json;\n\n// 3. 重新包裝成 HTTP Request 看得懂的格式\nreturn [{\n  json: {\n    replyToken: replyToken,\n    replyMessage: `✅ 已成功刪除紀錄喵！🐾\\\\n${brainData.date} ${brainData.theme} ${brainData.time}`\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1792,
+          -16
+        ],
+        "id": "9995fe5d-e1f6-4711-85e9-a53ae1637bba",
+        "name": "Code in JavaScript5"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "b8105342-5bd7-4279-bde5-f3675ea0da1d",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "=not_found",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1344,
+          -88
+        ],
+        "id": "c3d4bb18-432d-4c47-96b6-5bde41a7ff00",
+        "name": "判斷是否已有行程"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "b8105342-5bd7-4279-bde5-f3675ea0da1d",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "=new_item",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1344,
+          -328
+        ],
+        "id": "d111ddfb-d5ad-4a7d-822b-d892c84682ae",
+        "name": "判斷是否尚未添加行程"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. 先抓取 Webhook 的 Token\nconst webhook = $node[\"Webhook\"]; \nconst replyToken = webhook.json.body.events[0].replyToken;\n\n// 2. 抓取 Google Sheets 傳進來的所有資料\nconst items = [...$input.all()];\n\n// 🛠️ 智能補零函式\nfunction padZero(str) {\n  if (!str) return \"\";\n  return String(str).replace(/\\b(\\d)\\b/g, '0$1');\n}\n\n// 📅 【更新】動態產生 Google 日曆連結 (加入客製化備註提醒)\nfunction makeGCalUrl(title, dateStr, timeStr, type, originalDesc) {\n  const year = new Date().getFullYear();\n  const parts = (dateStr || '').split('/');\n  const m = (parts[0] || '01').padStart(2, '0');\n  const d = (parts[1] || '01').padStart(2, '0');\n  \n  const tParts = (timeStr || '').split(':');\n  const h = (tParts[0] || '00').padStart(2, '0');\n  const min = (tParts[1] || '00').padStart(2, '0');\n  \n  const start = `${year}${m}${d}T${h}${min}00`;\n  \n  // 預設行程為 1 小時\n  let endH = parseInt(h) + 1;\n  let endMin = min;\n  if (endH >= 24) { endH = 23; endMin = '59'; } \n  const end = `${year}${m}${d}T${String(endH).padStart(2, '0')}${endMin}00`;\n  \n  // 💡 魔法在這裡：根據類型，幫 Google 日曆的「備註欄」預先寫好提醒建議\n  let reminderNote = \"\";\n  if (title.includes('密室') || (type || '').includes('遊戲') || (type || '').includes('娛樂')) {\n    reminderNote = \"🔔 【系統溫馨提示】：這是密室逃脫行程！儲存前請記得在上方手動新增「1天前」與「7天前」的通知鬧鐘喔！\\n\\n\";\n  } else {\n    reminderNote = \"🔔 【系統溫馨提示】：點擊儲存前，記得確認是否有設定「1天前」的通知鬧鐘喔！\\n\\n\";\n  }\n  \n  // 把我們的提示，跟原本 Google Sheets 裡的備註接在一起 (如果有的話)\n  const finalDesc = reminderNote + (originalDesc || '');\n\n  // 產生網址並套用跳轉原生 App 咒語\n  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(finalDesc)}&openExternalBrowser=1`;\n}\n\n// 🌟 將資料按照「補零後的 日期+時間」進行排序\nitems.sort((a, b) => {\n  const dateA = padZero(a.json.日期);\n  const dateB = padZero(b.json.日期);\n  const timeA = padZero(a.json.時間);\n  const timeB = padZero(b.json.時間);\n  return `${dateA} ${timeA}`.localeCompare(`${dateB} ${timeB}`);\n});\n\n// ==========================================\n// 🎨 開始組裝 Flex Message 內容\n// ==========================================\nconst flexRows = [];\n\nif (items.length === 0 || !items[0].json.日期) {\n  flexRows.push({\n    \"type\": \"text\",\n    \"text\": \"目前沒有任何行程喔喵！🐾\",\n    \"size\": \"md\",\n    \"color\": \"#888888\",\n    \"align\": \"center\"\n  });\n} else {\n  for (const item of items) {\n    const data = item.json;\n    if (data.日期) {\n      const displayDate = padZero(data.日期);\n      const displayTime = padZero(data.時間);\n      const displayType = data.類型 || \"\"; \n      const displayTitle = data.主題名稱 || \"\"; \n      // 確保抓取到 Google Sheets 裡的原本備註\n      const displayDesc = data.備註 || data.Desc || \"\"; \n      \n      const fullTitle = [displayType, displayTitle].filter(Boolean).join(' ');\n\n      // 👉 將類型與備註傳入，判斷是否為密室逃脫\n      const gcalUrl = makeGCalUrl(fullTitle, data.日期, data.時間, displayType, displayDesc);\n\n      flexRows.push({\n        \"type\": \"box\",\n        \"layout\": \"baseline\",\n        \"spacing\": \"sm\",\n        \"action\": {\n          \"type\": \"uri\",\n          \"uri\": gcalUrl \n        },\n        \"contents\": [\n          {\n            \"type\": \"text\",\n            \"text\": `${displayDate} ${displayTime}`,\n            \"color\": \"#8c8c8c\",\n            \"size\": \"sm\",\n            \"flex\": 4\n          },\n          {\n            \"type\": \"text\",\n            \"text\": fullTitle,\n            \"wrap\": true,\n            \"color\": \"#2c3e50\",\n            \"size\": \"sm\",\n            \"weight\": \"bold\",\n            \"flex\": 5\n          },\n          {\n            \"type\": \"text\",\n            \"text\": \"➕\", \n            \"size\": \"xs\",\n            \"color\": \"#3498db\",\n            \"align\": \"end\",\n            \"flex\": 1\n          }\n        ]\n      });\n    }\n  }\n}\n\n// ==========================================\n// 📦 封裝成 LINE Flex 卡片\n// ==========================================\nconst flexMessage = {\n  \"type\": \"flex\",\n  \"altText\": \"📅 您的行程清單已送達！\",\n  \"contents\": {\n    \"type\": \"bubble\",\n    \"size\": \"mega\",\n    \"header\": {\n      \"type\": \"box\",\n      \"layout\": \"vertical\",\n      \"contents\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"✈️ 行程表\",\n          \"weight\": \"bold\",\n          \"color\": \"#3498db\",\n          \"size\": \"lg\"\n        }\n      ]\n    },\n    \"body\": {\n      \"type\": \"box\",\n      \"layout\": \"vertical\",\n      \"spacing\": \"md\",\n      \"contents\": flexRows\n    },\n    \"footer\": {\n      \"type\": \"box\",\n      \"layout\": \"vertical\",\n      \"contents\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"💡 點擊行程即可一鍵加入行事曆\",\n          \"color\": \"#aaaaaa\",\n          \"size\": \"xs\",\n          \"align\": \"center\"\n        }\n      ]\n    }\n  }\n};\n\n// 回傳\nreturn [{\n  json: {\n    linePayload: {\n      \"replyToken\": replyToken,\n      \"messages\": [ flexMessage ]\n    }\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          104
+        ],
+        "id": "d48b8da5-cca2-40ea-b35a-9a73dff77140",
+        "name": "卡片版"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.line.me/v2/bot/message/reply",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer MjELS9/6QObLO/buNg7qI6QbNhU4U06RY2vg3JgWh3HS1g2foTvs+MsTHPfornlNkngaxczNRApSw1n8t8QzTwbra5w+cMf5tFEloNvRoqcGBfHg76FE2DibIasVXmymcB8TDXP5E7OeRk0YgoPucAdB04t89/1O/w1cDnyilFU="
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ $json.linePayload }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1344,
+          104
+        ],
+        "id": "7579d80e-c321-4ed8-93b9-3d0f334c5525",
+        "name": "卡片版專屬回應"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. 先抓取 Webhook 的 Token (最穩定的來源)\nconst webhook = $node[\"Webhook\"]; \nconst replyToken = webhook.json.body.events[0].replyToken;\n\n// 2. 抓取 Google Sheets 傳進來的所有資料，並複製一份準備排序\nconst items = [...$input.all()];\n\n// 🛠️ 新增：智能補零函式 (Zero-padding)\n// 把 \"4/3\" 變成 \"04/03\"，把 \"9:00\" 變成 \"09:00\"\nfunction padZero(str) {\n  if (!str) return \"\";\n  // \\b(\\d)\\b 會精準抓出被符號包圍的「單一個數字」，並在它前面加上 0\n  return String(str).replace(/\\b(\\d)\\b/g, '0$1');\n}\n\n// ==========================================\n// 🌟 新增：將資料按照「補零後的 日期+時間」進行排序\n// ==========================================\nitems.sort((a, b) => {\n  // 將拿到的資料先經過 padZero 處理\n  const dateA = padZero(a.json.日期);\n  const dateB = padZero(b.json.日期);\n  const timeA = padZero(a.json.時間);\n  const timeB = padZero(b.json.時間);\n\n  // 組合起來會變成像 \"04/03 09:00\" 這種非常標準的格式\n  const dateTimeA = `${dateA} ${timeA}`;\n  const dateTimeB = `${dateB} ${timeB}`;\n\n  // 這樣字串比對就 100% 不會因為位數不同而排錯了！\n  return dateTimeA.localeCompare(dateTimeB);\n});\n// ==========================================\n\nlet scheduleText = \"\";\n\n// 3. 判斷資料：如果沒有 item，或者是空的 Google Sheets 物件\nif (items.length === 0 || !items[0].json.日期) {\n  scheduleText = \"目前沒有任何行程喔喵！🐾\";\n} else {\n  scheduleText = \"📅 目前的行程清單：\\\\n\";\n  \n  // 遍歷所有排好序的行程\n  for (const item of items) {\n    const data = item.json;\n    if (data.日期) {\n      const displayDate = padZero(data.日期);\n      const displayTime = padZero(data.時間);\n      const displayType = data.類型 || \"\"; // 🌟 新增抓取類型\n      const displayTitle = data.主題名稱 || \"\"; \n      \n      // 🌟 依照新順序：日期 -> 時間 -> 類型 -> 主題\n      // 使用 .filter(Boolean).join(' ') 可以自動把空值濾掉並完美用一個空格連接，預防多餘空白\n      const rowText = [displayDate, displayTime, displayType, displayTitle].filter(Boolean).join(' ');\n      \n      scheduleText += `• ${rowText}\\\\n`;\n    }\n  }\n  scheduleText += \"\\\\n記得準時參加喔喵！\";\n}\n\n// 4. 【核心關鍵】不論前面有多少資料，這裡只會輸出一筆固定的 JSON\nreturn [{\n  json: {\n    replyToken: replyToken,\n    replyMessage: scheduleText,\n    action: \"query\"\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          0,
+          744
+        ],
+        "id": "8e073c70-4024-47ad-8bbf-7b14928e8167",
+        "name": "行程code , 舊版不再使用"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.line.me/v2/bot/message/reply",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer MjELS9/6QObLO/buNg7qI6QbNhU4U06RY2vg3JgWh3HS1g2foTvs+MsTHPfornlNkngaxczNRApSw1n8t8QzTwbra5w+cMf5tFEloNvRoqcGBfHg76FE2DibIasVXmymcB8TDXP5E7OeRk0YgoPucAdB04t89/1O/w1cDnyilFU="
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"replyToken\": \"{{ $('Code in JavaScript').item.json.replyToken }}\",\n  \"messages\": [\n    {\n      \"type\": \"text\",\n      \"text\": \"{{ $('Code in JavaScript').item.json.replyMessage }}\"\n    }\n  ]\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          896,
+          296
+        ],
+        "id": "0d5dd031-94a7-495f-97dd-cb4f1114799d",
+        "name": "格式錯誤檢查"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 15
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          520
+        ],
+        "id": "55ad3238-b534-4baa-a37e-091d9a13aa1a",
+        "name": "Schedule Trigger",
+        "executeOnce": true
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "documentId": {
+            "__rl": true,
+            "value": "18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA",
+            "mode": "list",
+            "cachedResultName": "LINE群組行程表",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "工作表1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18LK2mXNwEpEUaeQiRmSTUmesj5kC4ina74TgQdHrPWA/edit#gid=0"
+          },
+          "filtersUI": {
+            "values": [
+              {
+                "lookupColumn": "群組ID",
+                "lookupValue": "=Cd21ef67f319f49d45abbd520175a9a82"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          224,
+          520
+        ],
+        "id": "4a9b111b-08c9-4dff-9dd6-11d5b35cbb0a",
+        "name": "Get row(s) in sheet3",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "UiwHn4ZOLTd2DeqY",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. 取得台灣時間的「今天」與「七天後」\nconst now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));\nnow.setHours(0, 0, 0, 0); \n\nconst sevenDaysLater = new Date(now);\nsevenDaysLater.setDate(now.getDate() + 7);\n\n// 🛠️ 改良日期解析：確保年份正確\nfunction parseDate(dateStr) {\n  if (!dateStr) return null;\n  const year = new Date().getFullYear();\n  const parts = dateStr.split('/'); // 處理 \"3/14\"\n  return new Date(year, parseInt(parts[0]) - 1, parseInt(parts[1]), 0, 0, 0);\n}\n\nfunction padZero(str) {\n  if (!str) return \"\";\n  return String(str).replace(/\\b(\\d)\\b/g, '0$1');\n}\n\n// 2. 抓取資料\nconst items = [...$input.all()];\nconst upcomingItems = [];\n\n// 3. 篩選未來 7 天內 (包含今天)\nfor (const item of items) {\n  const data = item.json;\n  const eventDate = parseDate(data.日期);\n  \n  if (eventDate && eventDate >= now && eventDate <= sevenDaysLater) {\n    upcomingItems.push(data);\n  }\n}\n\n// 🌟 【修正 1】如果 7 天內沒行程，直接 return 空，讓 Webhook 不會噴發\nif (upcomingItems.length === 0) {\n  return []; \n}\n\n// 4. 排序\nupcomingItems.sort((a, b) => {\n  const dateA = padZero(a.日期);\n  const dateB = padZero(b.日期);\n  const timeA = padZero(a.時間);\n  const timeB = padZero(b.時間);\n  return `${dateA} ${timeA}`.localeCompare(`${dateB} ${timeB}`);\n});\n\n// 5. 組裝 Flex Rows\nconst flexRows = upcomingItems.map(data => {\n  const fullTitle = [data.類型, data.主題名稱].filter(Boolean).join(' ');\n  return {\n    \"type\": \"box\",\n    \"layout\": \"baseline\",\n    \"spacing\": \"sm\",\n    \"contents\": [\n      { \"type\": \"text\", \"text\": `${padZero(data.日期)} ${padZero(data.時間)}`, \"color\": \"#8c8c8c\", \"size\": \"sm\", \"flex\": 4 },\n      { \"type\": \"text\", \"text\": fullTitle, \"wrap\": true, \"color\": \"#2c3e50\", \"size\": \"sm\", \"weight\": \"bold\", \"flex\": 6 }\n    ]\n  };\n});\nconst targetGroupId = upcomingItems[0][\"群組ID\"] || \"你的預設ID\";\n// 6. 回傳 Push 格式\nreturn [{\n  json: {\n    pushPayload: {\n      \"to\": targetGroupId, // 記得確認你的目標 ID\n      \"messages\": [\n        {\n          \"type\": \"flex\",\n          \"altText\": \"📅 即將到來的行程\",\n          \"contents\": {\n            \"type\": \"bubble\",\n            \"size\": \"mega\",\n            \"header\": {\n              \"type\": \"box\",\n              \"layout\": \"vertical\",\n              \"contents\": [{ \"type\": \"text\", \"text\": \"🔔 即將到來的行程\", \"weight\": \"bold\", \"color\": \"#e74c3c\", \"size\": \"lg\" }]\n            },\n            \"body\": {\n              \"type\": \"box\",\n              \"layout\": \"vertical\",\n              \"spacing\": \"md\",\n              \"contents\": flexRows\n            }\n          }\n        }\n      ]\n    }\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          448,
+          520
+        ],
+        "id": "d5bf6872-ca0a-48ed-a6bf-95cacf33dc9b",
+        "name": "卡片版1"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.line.me/v2/bot/message/push",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer MjELS9/6QObLO/buNg7qI6QbNhU4U06RY2vg3JgWh3HS1g2foTvs+MsTHPfornlNkngaxczNRApSw1n8t8QzTwbra5w+cMf5tFEloNvRoqcGBfHg76FE2DibIasVXmymcB8TDXP5E7OeRk0YgoPucAdB04t89/1O/w1cDnyilFU="
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ $json.pushPayload }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          672,
+          520
+        ],
+        "id": "faf894e7-c360-433c-b22f-8ee7166f4495",
+        "name": "卡片版專屬回應1"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Get row(s) in sheet2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Get row(s) in sheet1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "格式錯誤檢查",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append row in sheet": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Delete rows or columns from sheet": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript2": {
+        "main": [
+          [
+            {
+              "node": "判斷是否尚未添加行程",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript3": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get row(s) in sheet": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get row(s) in sheet1": {
+        "main": [
+          [
+            {
+              "node": "卡片版",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get row(s) in sheet2": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript4": {
+        "main": [
+          [
+            {
+              "node": "判斷是否已有行程",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript5": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "判斷是否已有行程": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Delete rows or columns from sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "判斷是否尚未添加行程": {
+        "main": [
+          [
+            {
+              "node": "Append row in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "卡片版": {
+        "main": [
+          [
+            {
+              "node": "卡片版專屬回應",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "行程code , 舊版不再使用": {
+        "main": [
+          []
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get row(s) in sheet3": {
+        "main": [
+          [
+            {
+              "node": "卡片版1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "卡片版1": {
+        "main": [
+          [
+            {
+              "node": "卡片版專屬回應1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Jeremy Lin",
+    "name": "Version 6a640b2c",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": []
+}
