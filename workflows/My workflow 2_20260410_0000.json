@@ -1,0 +1,140 @@
+{
+  "updatedAt": "2026-03-30T04:16:56.172Z",
+  "createdAt": "2026-03-30T03:59:44.119Z",
+  "id": "S2jG9l5UinmylMjB",
+  "name": "My workflow 2",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3253accf-7db8-4346-87ef-6cc329ffef87",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://www.coindesk.com/arc/outboundfeeds/rss/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "de9e0a66-2469-4e61-8cca-a7b23e0f474b",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "maxItems": 3
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "f780c196-2f61-41c4-950e-328817be1132",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-pro",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-pro"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=請幫我把以下的新聞標題與摘要，改寫成一篇適合發布在社群媒體的簡短中文快訊。\n\n【絕對寫作守則】\n1. 你的語氣必須永遠保持開朗、善良和充滿正能量！\n2. 內容中絕對不可以出現生氣、暴力或殘酷的情境。\n3. 不應出現黑暗、可怕或令人沮喪的場景與字眼。\n4. 沒有攻擊性行為或悲傷的結局，即使是市場下跌也要用樂觀、充滿希望的角度來解讀。\n5. 【最高指令】請「直接輸出」貼文內文即可！絕對不要加上「好的」、「沒問題」、「為您準備好」等任何對話式的開場白或結語，也不要輸出分隔線 (---)。\n\n【今日幣圈新聞】\n標題：{{ $json.title }}\n摘要：{{ $json.contentSnippet }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "2ce6bdea-bf71-4e5f-8498-b0ce0578da8b",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "skERTP6zBbLNtrpc",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "ddd355a5-0a0b-4196-8edd-39c0946cd697",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-30T03:59:44.119Z",
+      "createdAt": "2026-03-30T03:59:44.119Z",
+      "role": "workflow:owner",
+      "workflowId": "S2jG9l5UinmylMjB",
+      "projectId": "V1MDW5aV3riAJAHp"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
