@@ -1,0 +1,307 @@
+{
+  "updatedAt": "2026-03-04T07:10:42.881Z",
+  "createdAt": "2026-03-04T06:28:23.194Z",
+  "id": "IBUTGAr1f7XpwVMz",
+  "name": "My workflow",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "aab279db-919c-4018-a70a-7c3e2aca7174",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "filters": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "63610d8e-c211-4605-aaf6-7131dc9360ff",
+      "name": "Get many workflows",
+      "credentials": {
+        "n8nApi": {
+          "id": "LvNCpn11l0JBwyAQ",
+          "name": "n8n account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "list",
+        "owner": {
+          "__rl": true,
+          "value": "https://github.com/jeremylin1123/n8n-backup",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "n8n-backup",
+          "mode": "list",
+          "cachedResultName": "n8n-backup",
+          "cachedResultUrl": "https://github.com/jeremylin1123/n8n-backup"
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        -176
+      ],
+      "id": "308e9db3-9c65-49d0-998d-376dd9e9de2c",
+      "name": "List files",
+      "webhookId": "ad6d18ad-9da3-461b-8a47-000cc964c61c",
+      "credentials": {
+        "githubApi": {
+          "id": "8yQT2ucy8kdtiBkv",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "owner": {
+          "__rl": true,
+          "value": "https://github.com/jeremylin1123/n8n-backup",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "n8n-backup",
+          "mode": "list",
+          "cachedResultName": "n8n-backup",
+          "cachedResultUrl": "https://github.com/jeremylin1123/n8n-backup"
+        },
+        "filePath": "=workflows/{{ $json.name }}_{{ $today.format('yyyyMMdd_HHmm') }}.json",
+        "fileContent": "={{ JSON.stringify($node[\"Get many workflows\"].json, null, 2) }}",
+        "commitMessage": "=Backup: {{ $node[\"Get many workflows\"].json[\"name\"] }} at {{ $now }}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        144
+      ],
+      "id": "a081e8ce-3e07-41d7-ae9e-b84330bfd36c",
+      "name": "Create a file",
+      "webhookId": "ad6d18ad-9da3-461b-8a47-000cc964c61c",
+      "credentials": {
+        "githubApi": {
+          "id": "8yQT2ucy8kdtiBkv",
+          "name": "GitHub account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many workflows": {
+      "main": [
+        [
+          {
+            "node": "Create a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "2afe4bfb-04b4-4b16-a4b7-810188a3a2dc",
+  "activeVersionId": "2afe4bfb-04b4-4b16-a4b7-810188a3a2dc",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-04T06:28:23.194Z",
+      "createdAt": "2026-03-04T06:28:23.194Z",
+      "role": "workflow:owner",
+      "workflowId": "IBUTGAr1f7XpwVMz",
+      "projectId": "V1MDW5aV3riAJAHp"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-03-04T07:20:45.360Z",
+    "createdAt": "2026-03-04T07:10:42.882Z",
+    "versionId": "2afe4bfb-04b4-4b16-a4b7-810188a3a2dc",
+    "workflowId": "IBUTGAr1f7XpwVMz",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {}
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          0
+        ],
+        "id": "aab279db-919c-4018-a70a-7c3e2aca7174",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "filters": {},
+          "requestOptions": {}
+        },
+        "type": "n8n-nodes-base.n8n",
+        "typeVersion": 1,
+        "position": [
+          208,
+          0
+        ],
+        "id": "63610d8e-c211-4605-aaf6-7131dc9360ff",
+        "name": "Get many workflows",
+        "credentials": {
+          "n8nApi": {
+            "id": "LvNCpn11l0JBwyAQ",
+            "name": "n8n account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "file",
+          "operation": "list",
+          "owner": {
+            "__rl": true,
+            "value": "https://github.com/jeremylin1123/n8n-backup",
+            "mode": "url"
+          },
+          "repository": {
+            "__rl": true,
+            "value": "n8n-backup",
+            "mode": "list",
+            "cachedResultName": "n8n-backup",
+            "cachedResultUrl": "https://github.com/jeremylin1123/n8n-backup"
+          }
+        },
+        "type": "n8n-nodes-base.github",
+        "typeVersion": 1.1,
+        "position": [
+          400,
+          -176
+        ],
+        "id": "308e9db3-9c65-49d0-998d-376dd9e9de2c",
+        "name": "List files",
+        "webhookId": "ad6d18ad-9da3-461b-8a47-000cc964c61c",
+        "credentials": {
+          "githubApi": {
+            "id": "8yQT2ucy8kdtiBkv",
+            "name": "GitHub account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "file",
+          "owner": {
+            "__rl": true,
+            "value": "https://github.com/jeremylin1123/n8n-backup",
+            "mode": "url"
+          },
+          "repository": {
+            "__rl": true,
+            "value": "n8n-backup",
+            "mode": "list",
+            "cachedResultName": "n8n-backup",
+            "cachedResultUrl": "https://github.com/jeremylin1123/n8n-backup"
+          },
+          "filePath": "=workflows/{{ $json.name }}_{{ $today.format('yyyyMMdd_HHmm') }}.json",
+          "fileContent": "={{ JSON.stringify($node[\"Get many workflows\"].json, null, 2) }}",
+          "commitMessage": "=Backup: {{ $node[\"Get many workflows\"].json[\"name\"] }} at {{ $now }}"
+        },
+        "type": "n8n-nodes-base.github",
+        "typeVersion": 1.1,
+        "position": [
+          560,
+          144
+        ],
+        "id": "a081e8ce-3e07-41d7-ae9e-b84330bfd36c",
+        "name": "Create a file",
+        "webhookId": "ad6d18ad-9da3-461b-8a47-000cc964c61c",
+        "credentials": {
+          "githubApi": {
+            "id": "8yQT2ucy8kdtiBkv",
+            "name": "GitHub account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Get many workflows",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get many workflows": {
+        "main": [
+          [
+            {
+              "node": "Create a file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Jeremy Lin",
+    "name": "Version 2afe4bfb",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}
